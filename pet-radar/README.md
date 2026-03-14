@@ -23,7 +23,19 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+**PetRadar** – API REST con NestJS para registrar mascotas perdidas y encontradas. Al registrar una mascota encontrada, se buscan mascotas perdidas en un radio de 500 m (PostGIS) y se envía un correo a un buzón genérico con los datos y un mapa estático (Mapbox).
+
+### Endpoints
+
+- `POST /lost-pets` – Registrar mascota perdida (body: name, species, breed, color, size, description?, photo_url?, owner_name, owner_email, owner_phone, **latitude**, **longitude**, address?, lost_date).
+- `POST /found-pets` – Registrar mascota encontrada (body: species, breed?, color, size, description?, photo_url?, finder_name, finder_email, finder_phone, **latitude**, **longitude**, address?, found_date). Se buscan perdidas en 500 m y se envía correo por cada coincidencia.
+
+### Base de datos
+
+Por defecto la API usa **SQLite** (archivo `petradar.sqlite` en la raíz del proyecto). No hace falta instalar ni configurar nada: al arrancar con `npm run start:dev` se crean las tablas solas.
+
+- Opcional: en `.env` puedes poner `DB_PATH=otra_ruta/petradar.sqlite` para cambiar la ubicación del archivo.
+- Para correo y mapa: copia `.env.example` a `.env` y configura MAIL_* y opcionalmente MAPBOX_ACCESS_TOKEN.
 
 ## Project setup
 

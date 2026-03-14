@@ -1,0 +1,42 @@
+-- Ejecutar en PostgreSQL con PostGIS instalado.
+-- Desde psql o desde tu cliente: \i path/to/001_create_tables.sql
+
+CREATE EXTENSION IF NOT EXISTS postgis;
+
+CREATE TABLE IF NOT EXISTS lost_pets (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(255) NOT NULL,
+  species VARCHAR(100) NOT NULL,
+  breed VARCHAR(255) NOT NULL,
+  color VARCHAR(100) NOT NULL,
+  size VARCHAR(50) NOT NULL,
+  description TEXT,
+  photo_url VARCHAR(500),
+  owner_name VARCHAR(255) NOT NULL,
+  owner_email VARCHAR(255) NOT NULL,
+  owner_phone VARCHAR(50) NOT NULL,
+  location GEOMETRY(Point, 4326),
+  address VARCHAR(500),
+  lost_date TIMESTAMP NOT NULL,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS found_pets (
+  id SERIAL PRIMARY KEY,
+  species VARCHAR(100) NOT NULL,
+  breed VARCHAR(255),
+  color VARCHAR(100) NOT NULL,
+  size VARCHAR(50) NOT NULL,
+  description TEXT,
+  photo_url VARCHAR(500),
+  finder_name VARCHAR(255) NOT NULL,
+  finder_email VARCHAR(255) NOT NULL,
+  finder_phone VARCHAR(50) NOT NULL,
+  location GEOMETRY(Point, 4326),
+  address VARCHAR(500),
+  found_date TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
