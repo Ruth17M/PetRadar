@@ -25,23 +25,40 @@ export class EmailService {
     },
   });
 
+  // Descarga la imagen de Mapbox como Buffer
+  private async fetchMapImage(url: string): Promise<Buffer | null> {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return null;
+      const arrayBuffer = await res.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    } catch {
+      return null;
+    }
+  }
+
   async sendFoundNotification(data: NotifyFoundEmailData): Promise<boolean> {
     const to = envs.MAIL_TO || envs.MAILER_EMAIL;
-    if (!envs.MAILER_EMAIL || !envs.MAILER_PASSWORD) {
-      console.warn(
-        'Correo no enviado: falta MAILER_EMAIL o MAILER_PASSWORD en .env. Asegúrate de que el archivo .env esté dentro de la carpeta pet-radar (junto a package.json).',
-      );
+    if (!envs.MAILER_EMAIL || !envs.MAILER_PASSWORD || !to) {
+      console.warn('Correo no enviado: faltan credenciales');
       return false;
     }
-    if (!to) {
-      console.warn('Correo no enviado: configura MAIL_TO o MAILER_EMAIL en .env');
-      return false;
-    }
+
+    const mapImageBuffer = data.mapImageUrl
+      ? await this.fetchMapImage(data.mapImageUrl)
+      : null;
+
+  
+    const mapHtml = mapImageBuffer
+      ? `<img src="cid:mapimage" alt="Mapa" style="max-width:100%;height:auto;" />`
+      : data.mapImageUrl
+        ? `<p>No se pudo cargar la imagen del mapa.</p>`
+        : `<p>Configura MAPBOX_ACCESS_TOKEN en .env para ver el mapa.</p>`;
 
     const html = `
       <h2>PetRadar – Posible mascota encontrada</h2>
       <p>Se ha registrado una mascota encontrada que podría coincidir con una reportada como perdida.</p>
-      
+
       <h3>Datos de la mascota encontrada</h3>
       <ul>
         <li><strong>Especie:</strong> ${data.foundSpecies}</li>
@@ -49,20 +66,30 @@ export class EmailService {
         <li><strong>Color:</strong> ${data.foundColor}</li>
         <li><strong>Descripción:</strong> ${data.foundDescription ?? 'Sin descripción'}</li>
       </ul>
-      
+
       <h3>Contacto de quien la encontró</h3>
       <ul>
         <li><strong>Nombre:</strong> ${data.finderName}</li>
         <li><strong>Correo:</strong> ${data.finderEmail}</li>
         <li><strong>Teléfono:</strong> ${data.finderPhone}</li>
       </ul>
-      
+
       <p><strong>Mascota perdida reportada:</strong> ${data.lostPetName}</p>
       <p><strong>Dirección donde se perdió:</strong> ${data.lostPetAddress ?? 'No indicada'}</p>
-      
-      <h3>Mapa (punto perdido y punto encontrado)</h3>
-      ${data.mapImageUrl ? `<img src="${data.mapImageUrl}" alt="Mapa" style="max-width: 100%; height: auto;" />` : '<p>Configura MAPBOX_ACCESS_TOKEN en .env para ver el mapa.</p>'}
+
+      <h3>Mapa ( 🔴 perdido y 🟢 encontrado)</h3>
+      ${mapHtml}
     `;
+
+    const attachments = mapImageBuffer
+      ? [
+          {
+            filename: 'mapa.png',
+            content: mapImageBuffer,
+            cid: 'mapimage', 
+          },
+        ]
+      : [];
 
     try {
       await this.transporter.sendMail({
@@ -70,6 +97,7 @@ export class EmailService {
         to,
         subject: `PetRadar – Posible coincidencia: ${data.lostPetName}`,
         html,
+        attachments,
       });
       return true;
     } catch (error) {

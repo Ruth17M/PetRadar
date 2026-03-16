@@ -1,5 +1,3 @@
--- Ejecutar en PostgreSQL con PostGIS instalado.
--- Desde psql o desde tu cliente: \i path/to/001_create_tables.sql
 
 CREATE EXTENSION IF NOT EXISTS postgis;
 
